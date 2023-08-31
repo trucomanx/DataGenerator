@@ -45,6 +45,7 @@ class DataGeneratorFromDataframe(tf.keras.utils.Sequence):
         self.zoom_range = zoom_range;
         self.batch_size = int(batch_size);
         self.shuffle = shuffle;
+        self.root_dir = root_dir;
 
         self.L = df.shape[0];
         if self.batch_size>self.L:
@@ -93,7 +94,7 @@ class DataGeneratorFromDataframe(tf.keras.utils.Sequence):
         X, y = DGLDF.load_numpy_batch_from_dataframe(   batch_df,
                                                         col_id_x=self.col_id_x,
                                                         col_id_y=self.col_id_y,
-                                                        root_dir=root_dir);
+                                                        root_dir=self.root_dir);
 
         if self.horizontal_flip==True and np.random.binomial(1,0.5)==0:
             X=DGMST.batch_multispectral_image_horizontal_flip(X);
