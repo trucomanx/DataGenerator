@@ -46,7 +46,15 @@ class DataGeneratorFromDataframe(tf.keras.utils.Sequence):
         self.batch_size = int(batch_size);
         self.shuffle = shuffle;
         self.root_dir = root_dir;
-
+        
+        self.last_transform={
+            "rotation_angle": None,
+            "horizontal_flip": None,
+            "vertical_flip": None,
+            "zoom_factor": None
+        }
+        self.last_batch_indexes=None;
+        
         self.L = df.shape[0];
         if self.batch_size>self.L:
             print(' ')
@@ -68,12 +76,34 @@ class DataGeneratorFromDataframe(tf.keras.utils.Sequence):
         if index >= (self.NBatchsPerEpoch-1):
             end =self.L;
             init=end-self.batch_size;
-            batch_indexs=self.indexes[init:end];
+            batch_indexes=self.indexes[init:end];
         else:
             init=index*self.batch_size;
             end =init+self.batch_size;
-            batch_indexs=self.indexes[init:end];
-        X, y = self.__temporal_data_generation(batch_indexs)
+            batch_indexes=self.indexes[init:end];
+        
+        self.last_transform["horizontal_flip"] = False;
+        self.last_transform["vertical_flip"] = False;
+        self.last_transform["zoom_factor"] = 1.0;
+        self.last_transform["rotation_angle"] = 0.0;
+        
+        if self.horizontal_flip==True and np.random.binomial(1,0.5)==1:
+            self.last_transform["horizontal_flip"] = True;
+            
+        if self.vertical_flip==True and np.random.binomial(1,0.5)==1:
+            self.last_transform["vertical_flip"] = True;
+            
+        if self.zoom_range!=None:
+            zoom_factor=np.random.uniform(self.zoom_range[0],self.zoom_range[1],1)[0];
+            self.last_transform["zoom_factor"] = zoom_factor;
+        
+        if self.rotation_range!=0:
+            angle=self.rotation_range*np.random.uniform(-1.0,1.0,1)[0];
+            self.last_transform["rotation_angle"] = angle;
+            
+        
+        self.last_batch_indexes=batch_indexes;
+        X, y = self.get_item_data_generation(batch_indexes,self.last_transform)
 
         return X, y
 
@@ -86,28 +116,33 @@ class DataGeneratorFromDataframe(tf.keras.utils.Sequence):
 
         return;
 
-    def __temporal_data_generation(self,batch_indexs):
+    def get_last_transform(self):
+        return self.last_transform;
+    def get_last_batch_indexes(self):
+        return self.last_batch_indexes;
+    
+    def get_item_data_generation(self,batch_indexes,last_transform):
         'Generates data containing batch_size samples'
         # Initialization
-
-        batch_df = self.df.iloc[batch_indexs,:]
+        
+        batch_df = self.df.iloc[batch_indexes,:]
         X, y = DGLDF.load_numpy_batch_from_dataframe(   batch_df,
                                                         col_id_x=self.col_id_x,
                                                         col_id_y=self.col_id_y,
                                                         root_dir=self.root_dir);
-
-        if self.horizontal_flip==True and np.random.binomial(1,0.5)==0:
+        
+        if last_transform["horizontal_flip"]==True:
             X=DGMST.batch_multispectral_image_horizontal_flip(X);
             
-        if self.vertical_flip==True and np.random.binomial(1,0.5)==0:
+        if last_transform["vertical_flip"]==True:
             X=DGMST.batch_multispectral_image_vertical_flip(X);
             
-        if self.rotation_range!=0:
-            angle=self.rotation_range*np.random.uniform(-1,1,1)[0];
-            X=DGMST.batch_multispectral_image_rotate(X,angle)
-            
-        if self.zoom_range!=None:
-            zoom_factor=np.random.uniform(self.zoom_range[0],self.zoom_range[1],1)[0];
-            X=DGMST.batch_multispectral_image_zoom(X, zoom_factor);
+        if last_transform["zoom_factor"]!=1.0:
+            X=DGMST.batch_multispectral_image_zoom(X, last_transform["zoom_factor"]);
+        
+        if last_transform["rotation_angle"]!=0.0:
+            X=DGMST.batch_multispectral_image_rotate(X,last_transform["rotation_angle"]);
+        
+        #print('y batch',y)
         
         return X, y

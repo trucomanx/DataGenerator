@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-root_dir='../boveda';
+root_dir='/some/dataset/path';# path of dataset.csv
 col_id_x=0;
 col_id_y=1;
 
