@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 def repeat_and_balance_data_in_dataframe(df,col_id_y,label_list):
     '''
     
