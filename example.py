@@ -1,12 +1,5 @@
-# Install DataGeneratorTool
+#!/usr/bin/python
 
-Install DataGeneratorTool following https://github.com/trucomanx/DataGeneratorTool/blob/main/README_install.md 
-
-# DataGeneratorTool example code
-
-The next code shows an example use of DataGeneratorTool library.
-
-```python
 root_dir='../boveda';
 col_id_x=0;
 col_id_y=1;
@@ -30,8 +23,4 @@ dat_gen=DataGeneratorFromDataframe( df,col_id_x,col_id_y,
 
 print(df)
 print(issubclass(DataGeneratorFromDataframe,tf.keras.utils.Sequence))
-```
 
-# DataGeneratorTool example files
-
-Example files can be found at [example.py](example.py).
